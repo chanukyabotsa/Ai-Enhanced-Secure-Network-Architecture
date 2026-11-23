@@ -1,0 +1,11 @@
+IP ADDRESS PLAN - After Phase 4
+
+Segment   VMware   Subnet            Gateway (pfSense)
+User      VMnet2   192.168.42.0/24   192.168.42.1 (LAN, em1)
+Server    VMnet3   192.168.43.0/24   192.168.43.1 (OPT1, em2)
+WAN       VMnet8   192.168.77.0/24   DHCP (em0) -> internet
+
+Device         Segment  IP               Gateway        Service
+Kali Linux     User     192.168.42.10    192.168.42.1   -
+Ubuntu Server  Server   192.168.43.20    192.168.43.1   nginx (HTTP 80)
+pfSense        All      .42.1 / .43.1    -              Firewall / Router

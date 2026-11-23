@@ -1,0 +1,27 @@
+PHASE 12-14 - ML MODEL (PYTORCH) - EVIDENCE LOG
+Platform: Google Colab (CPU). Dataset: CIC-IDS2017 (cleaned), 2,520,751 flows.
+
+Goal: detect attacks, especially NOVEL ones that signature rules (Suricata) miss.
+Labels: Normal = 0, Attack = 1 (binary). Data imbalanced: 83% normal.
+Features (6, chosen because Suricata flow logs provide the same):
+  Destination Port, Flow Duration, Total Fwd Packets,
+  Total Length of Fwd Packets, Flow Bytes/s, Flow Packets/s
+
+Generalization split:
+  Train/Test: Normal + DoS + DDoS + Port Scanning (80/20 split)
+  Unseen (never in training): Brute Force + Web Attacks + Bots (13,241)
+
+Model: MLP 6 -> 32 -> 16 -> 1 (ReLU), Adam lr 0.01, 100 epochs
+  v1 plain loss:     Recall 46.57%  (missed half the attacks - imbalance)
+  v2 weighted loss:  pos_weight 5.08 -> Recall 72.84%  (fixed)
+
+Threshold tuning (v2):
+  Thr  TestRecall  Precision  NoveltyDetect
+  0.5    72.84%     54.00%      52.23%
+  0.4    81.47%     48.42%      71.81%   <- CHOSEN
+  0.3    91.97%     27.61%      72.79%   (precision collapses)
+
+KEY RESULT: 71.81% of attack types never seen in training were detected.
+
+Screenshots: P12_01 training loss | P13_01 test metrics | P13_02 threshold table
+             P14_01 novelty test | P14_02 confusion matrix (threshold 0.4)

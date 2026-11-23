@@ -1,0 +1,29 @@
+PHASE 7 + 11 - WIRESHARK PACKET ANALYSIS & ALERT INVESTIGATION
+Tool: Wireshark 4.6.6 on Kali (eth0). R8 temporarily disabled so traffic
+could reach the server for capture; re-enabled afterwards.
+
+CAPTURE 1 - P11_capture.pcapng (29 packets): normal traffic
+  Filter ip.addr == 192.168.43.20 : Kali <-> Server TCP, HTTP, ICMP
+  Filter tcp.stream eq 0 : TCP 3-way handshake
+     SYN -> SYN,ACK -> ACK -> GET / HTTP/1.1 -> 200 OK -> FIN/ACK (8.7 ms)
+  Normal request: 143 bytes, User-Agent: curl/8.20.0
+
+CAPTURE 2 - P11_capture_nmap.pcapng (82 packets): nmap -sV -p 80
+  Pkts 1-5 : host discovery (ICMP echo + timestamp, SYN to 443, ACK to 80)
+  Pkts 6-8 : SYN -> SYN,ACK -> RST (half-open, handshake never completed)
+  Filter http.user_agent contains "Nmap" -> 4 requests
+     /nmaplowercheck..., POST /sdk, /evox/about, /HNAP1
+     User-Agent: Mozilla/5.0 (compatible; Nmap Scripting Engine)
+     = what Suricata rule "ET SCAN Nmap Scripting Engine User-Agent" detects
+  Filter http.request && !http.user_agent -> 4 requests
+     "GET / HTTP/1.0" (84 bytes) - request line only, no headers at all
+     = same pattern as the AI-ONLY flow (Suricata log: GET /, user agent null)
+
+CONCLUSION
+  Labelled scanner requests -> caught by Suricata signatures.
+  Header-less probes -> no signature match, flagged by the AI behaviour model.
+  Packet-level evidence confirms the AI-only detection was scanner traffic.
+
+Screenshots: P11_02 R8 disabled | P11_03 capture running | P11_04 capture 1
+  P11_05 server filter | P11_06 TCP handshake | P11_07 normal request + UA
+  P11_08 nmap capture | P11_09 no-UA probe | P11_10 Nmap UA (Suricata match)

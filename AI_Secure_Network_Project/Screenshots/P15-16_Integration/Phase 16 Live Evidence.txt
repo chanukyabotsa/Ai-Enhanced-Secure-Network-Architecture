@@ -1,0 +1,9 @@
+LIVE DEMO (28-Oct, 14:04-14:05 UTC) - ids_ai.py live mode
+  Normal: 3x curl from Kali -> AI 15.0% / 15.5% / 15.2% -> CLEAN (no false alarm)
+  Attack: nmap -sV -p 80 from Kali (learned "nginx 1.28.3 (Ubuntu)")
+    9 recon flows: Suricata 4 | AI ONLY 1 (P=51.5%) | missed by both 4
+  Summary: SURICATA ONLY 4 | AI ONLY 1 | CLEAN 7 | TOTAL 12
+  Combined recon coverage 5/9 vs Suricata alone 4/9
+  AI-only detection reproduced (historical 51.6% vs live 51.5%)
+  System recommendation: investigate/block 192.168.42.10
+Screenshots: P16_00 Kali recon | P16_01 live detection | P16_02 live summary

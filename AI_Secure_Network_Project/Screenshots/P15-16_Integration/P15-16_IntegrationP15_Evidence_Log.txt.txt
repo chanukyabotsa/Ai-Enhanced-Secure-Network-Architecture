@@ -1,0 +1,54 @@
+PHASE 15-16 - SURICATA + AI INTEGRATION - EVIDENCE LOG
+Dates: 27-28 Oct 2026
+
+Design: Trained PyTorch MLP exported to JSON (weights + scaler) and run
+with NumPy on the Ubuntu server, next to Suricata (no PyTorch install needed).
+Equivalence check (Colab, 20,000 real flows): max probability difference
+0.000002, same decision 100.0%.
+
+Script: ids_ai.py
+  - reads Suricata eve.json flow events for the server segment
+  - maps them to the 6 training features
+  - AI P(attack) (real model output), threshold 0.4
+  - correlates with Suricata alerts (same flow_id)
+  - verdict: BOTH / SURICATA ONLY / AI ONLY / CLEAN
+  - recommends investigation/block only (human-in-the-loop)
+
+RESULT (historical traffic, 100 flows to server):
+  SURICATA ONLY 57 | AI ONLY 1 | BOTH 0 | CLEAN 42
+  Top source: 192.168.42.10 (attacker VM), 58 suspicious flows
+
+Interpretation:
+  - Web attacks (LFI, /etc/hosts, global.asa) carry the threat in the
+    request text (payload). Suricata reads payload -> detected.
+    Flow statistics look like normal browsing -> AI said normal.
+  - The layers are complementary, not redundant.
+
+AI-ONLY CASE (investigated):
+  Flow 1197016723725715, 26-Oct 12:49:39 UTC
+  192.168.42.10 -> 192.168.43.20:80, P(attack) = 51.6%, no Suricata alert
+  HTTP: GET /, NO User-Agent header, status 200
+  Consistent with an Nmap service-detection probe (run at that time).
+  -> Reconnaissance missed by signatures, flagged by the behaviour model.
+
+Limitations:
+  - Suricata bytes_toserver includes headers; training feature counts payload (approximation)
+  - Model trained on CIC-IDS2017 traffic; our lab traffic differs (domain shift)
+  - AI confidence 51.6% = moderate; analyst confirmation required
+
+Screenshots: P15_01 equivalence | P15_02 weights+numpy on Ubuntu
+             P15_03 flagged flows | P15_04 summary | P15_05 AI-only flow
+             P11_01 AI-only investigation (HTTP details)
+
+
+
+
+LIVE DEMO (28-Oct, 14:04-14:05 UTC) - ids_ai.py live mode
+  Normal: 3x curl from Kali -> AI 15.0% / 15.5% / 15.2% -> CLEAN (no false alarm)
+  Attack: nmap -sV -p 80 from Kali (learned "nginx 1.28.3 (Ubuntu)")
+    9 recon flows: Suricata 4 | AI ONLY 1 (P=51.5%) | missed by both 4
+  Summary: SURICATA ONLY 4 | AI ONLY 1 | CLEAN 7 | TOTAL 12
+  Combined recon coverage 5/9 vs Suricata alone 4/9
+  AI-only detection reproduced (historical 51.6% vs live 51.5%)
+  System recommendation: investigate/block 192.168.42.10
+Screenshots: P16_00 Kali recon | P16_01 live detection | P16_02 live summary

@@ -1,0 +1,35 @@
+PHASE 5-6 - FIREWALL SETUP & VERIFICATION - EVIDENCE LOG
+Date: 26-Oct-2026
+Firewall: pfSense CE 2.7.2 | GUI: https://192.168.42.1 (from Kali)
+Design: Least privilege - allow only required traffic, block & log the rest.
+Guest simulation: secondary IP 192.168.42.50 on Kali acts as a guest device.
+
+FIREWALL RULES (LAN interface, evaluated top to bottom, first match wins)
+#   Action  Proto  Source           Destination          Port  Purpose
+R1  BLOCK   Any    192.168.42.50    OPT1 subnets         Any   Guest cannot reach servers (logged)
+R2  PASS    TCP    LAN subnets      192.168.43.20        80    Users can use website
+R3  PASS    ICMP   LAN subnets      192.168.43.20        echo  Users can ping server
+R4  BLOCK   Any    LAN subnets      OPT1 subnets         Any   All other server access denied (logged)
+R5  PASS    Any    LAN subnets      Any                  Any   Users -> Internet (default rule)
+OPT1: no pass rules -> R6 implicit default deny (Server cannot initiate to Users)
+
+TEST RESULTS
+Test  Description                    Command (from)                                  Expected  Actual   Result
+T1    Block all to server (R4 only)  curl -m 5 http://192.168.43.20 (Kali)            Blocked   Timeout  PASS
+T2    User -> Web HTTP (R2)          curl -m 5 http://192.168.43.20 (Kali .10)        Allowed   Page     PASS
+T3    User -> Server SSH (R4)        nc -zv -w 5 192.168.43.20 22 (Kali)              Blocked   Timeout  PASS
+T4    User -> Server ping (R3)       ping -c 3 192.168.43.20 (Kali)                   Allowed   0% loss  PASS
+T5    Guest -> Web (R1)              curl --interface 192.168.42.50 ... (Kali .50)    Blocked   Timeout  PASS
+T6    User -> Internet (R5)          ping -c 3 8.8.8.8 (Kali)                         Allowed   0% loss  PASS
+T7    Server -> User (R6)            ping -c 3 192.168.42.10 (Ubuntu)                 Blocked   100%loss PASS
+
+ISSUES FOUND & FIXED
+#3 Rule changes had no effect -> "Apply Changes" was not clicked. Fix: Apply.
+#4 R3 (ping allow) was added below R4 (block) -> ping still blocked.
+   Cause: pfSense evaluates rules top-down, first match wins.
+   Fix: Dragged R3 above R4, Save, Apply -> ping allowed.
+
+SCREENSHOTS
+P05_03/04 rules before | P05_05 R4 | P05_06 T1 | P05_07 log | P05_08 R2 | P05_09 T2+T3
+P05_10 reorder | P05_11 T4 | P05_12 R1 | P05_13 T5 | P05_14 T6 | P05_15 T7
+P05_16 firewall log blocks | P05_17 final rules

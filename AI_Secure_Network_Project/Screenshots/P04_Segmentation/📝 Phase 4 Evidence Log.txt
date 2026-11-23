@@ -1,0 +1,22 @@
+PHASE 4 - NETWORK SEGMENTATION - EVIDENCE LOG
+Date: 26-Oct-2026
+
+Design: Separate VMware virtual networks per segment (VLAN-equivalent),
+        all inter-segment traffic routed through pfSense firewall.
+
+P04_01_vmnet3_created.png      VMnet3 (192.168.43.0/24, no DHCP) = Server segment
+P04_02_pfsense_vm_hardware.png pfSense VM: 1 vCPU, 1 GB RAM, 3 NICs (NAT, VMnet2, VMnet3)
+P04_03/04 pfsense install      pfSense CE 2.7.2 installed (ZFS)
+P04_05_interfaces_assigned.png WAN=em0 (NAT), LAN=em1 (VMnet2), OPT1=em2 (VMnet3)
+P04_06_ips_configured.png      LAN 192.168.42.1/24, OPT1 192.168.43.1/24
+P04_07_ubuntu_adapter_vmnet3   Ubuntu moved to Server segment
+P04_08_ubuntu_new_ip.png       Ubuntu 192.168.43.20/24, gateway 192.168.43.1 (netplan)
+P04_09_pfsense_ping_ubuntu.png pfSense -> Ubuntu ping: 0% loss -> PASS
+P04_10_kali_gateway_config.png Kali gateway 192.168.42.1 (/etc/network/interfaces)
+P04_11_kali_to_server_via_pfsense.png
+   ping 192.168.43.20 -> 0% loss, TTL 63 (one routed hop) -> PASS
+   curl http://192.168.43.20 -> page returned -> PASS
+   traceroute -I -> hop 1: 192.168.42.1 (pfSense), hop 2: 192.168.43.20 -> PASS
+
+Result: User and Server are now separate segments. Traffic between
+them must pass through pfSense (the control point for firewall rules).

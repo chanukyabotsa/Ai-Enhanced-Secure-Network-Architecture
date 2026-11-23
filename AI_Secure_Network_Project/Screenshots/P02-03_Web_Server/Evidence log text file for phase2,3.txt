@@ -1,0 +1,29 @@
+PHASE 2-3 - WEB SERVER (CLIENT-SERVER BASELINE) - EVIDENCE LOG
+Date: 26-Oct-2026
+
+P02_01_nginx_running.png
+  Command: sudo systemctl status nginx
+  Result: active (running), enabled at boot -> PASS
+
+P02_02_port80_listening.png
+  Command: sudo ss -tlnp | grep :80
+  Result: nginx listening on 0.0.0.0:80 -> PASS
+
+P02_03_kali_curl.png
+  Command (Kali): curl http://192.168.42.20
+  Result: Custom project page HTML returned -> PASS
+
+P02_04_kali_browser.png
+  Action: Firefox -> http://192.168.42.20
+  Result: "AI-Based Secure Network Lab" page displayed -> PASS
+
+P02_05_ufw_allow_80.png
+  Command: sudo ufw allow 80/tcp
+  Result: Rule "80/tcp ALLOW Anywhere" added
+
+ISSUE FOUND & FIXED:
+  Kali curl timed out (~134 s) although ping worked.
+  Cause: Ubuntu host firewall (UFW) was active and silently dropping port 80.
+  Fix: Allowed HTTP with "sudo ufw allow 80/tcp".
+  Learning: A timeout (no reply) indicates a firewall DROP;
+            "Connection refused" would mean the service is not running.

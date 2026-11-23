@@ -1,0 +1,31 @@
+PHASE 17-18 - SECURITY RESPONSE & RETEST - EVIDENCE LOG
+Dates: 28-Oct and 01-Nov 2026
+
+TRIGGER: ids_ai.py recommended "investigate 192.168.42.10; block in pfSense".
+INVESTIGATION (analyst): ET SCAN Nmap alerts + AI-only header-less probe
+  (Wireshark confirmed scanner traffic) -> source confirmed malicious.
+RESPONSE (human-in-the-loop): pfSense LAN rule R8 at top
+  BLOCK  src 192.168.42.10  ->  OPT1 subnets  (logged)
+
+RETEST                                  BEFORE R8            AFTER R8          RESULT
+T8  Attacker curl -m 5 (website)        page loaded          timed out         PASS
+T9  Attacker nmap -sV -p 80             80/tcp open nginx    host seems down   PASS
+T10 Attacker ping -c 3                  0% loss              100% loss         PASS
+T11 Normal user 192.168.42.11 curl      -                    page loaded       PASS (business continues)
+T12 Server-side: flows from .10 after
+    block (Suricata eve.json)           -                    0                 PASS (packets never reached server)
+pfSense firewall log: entries matched "R8 RESPONSE" for 192.168.42.10 -> 192.168.43.20
+
+CLEANUP
+  R7 (temporary server internet for package installs) disabled.
+  Ubuntu ping 8.8.8.8 -> 100% loss: server isolated again.
+
+ISSUES FOUND & FIXED
+#5 Forgotten pfSense admin password -> reset from console (option 3),
+   new password set and recorded.
+#6 "CSRF check failed" after VM restart (stale browser tab, expired token)
+   -> reopened page fresh instead of resubmitting.
+
+Screenshots: P17_01 R8 rule | P17_02 R8 re-enabled | P18_01 curl+nmap blocked
+  P18_02 normal user allowed | P18_03 ping blocked | P18_04 pfSense log R8
+  P18_05 server: 0 attacker flows | P18_06 R7 disabled, server isolated

@@ -1,0 +1,18 @@
+🖥️ Part A: VMware screens (3 pics)
+#	Ekkada	Save as
+1	Edit → Virtual Network Editor	P01_01_vmnet2_editor.png
+2	Kali VM → Settings → Network Adapter 2 click	P01_02_kali_adapters.png
+3	Ubuntu VM → Settings → Network Adapter 2 click	P01_03_ubuntu_adapters.png
+🐉 Part B: Kali terminal (3 pics)
+
+Mundu exit type chesi PS> nunchi bayataki raa. Prathi command mundu clear cheyyi.
+
+#	Command	Save as
+4	ip a	P01_04_kali_ip.png
+6	ping -c 4 192.168.42.20	P01_06_ping_kali_to_server.png
+8	ping -c 3 8.8.8.8	P01_08_kali_no_internet.png
+🖧 Part C: Ubuntu terminal (3 pics)
+#	Command	Save as
+5	ip a	P01_05_ubuntu_ip.png
+7	ping -c 4 192.168.42.10	P01_07_ping_server_to_kali.png
+9	ping -c 3 8.8.8.8	P01_09_ubuntu_no_internet.png
